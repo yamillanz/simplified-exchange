@@ -2,6 +2,7 @@ const Link = require('grenache-nodejs-link');
 const { PeerRPCServer, PeerRPCClient } = require('grenache-nodejs-http');
 const OrderBook = require('./orderBook');
 const async = require('async');
+const OrderService = require('./application/OrderService');
 
 const link = new Link({
   grape: 'http://127.0.0.1:30001'
@@ -20,7 +21,8 @@ console.log('🚀 ~ Server started on port:', service.port);
 const peerClient = new PeerRPCClient(link, {});
 peerClient.init();
 
-const orderBook = new OrderBook();
+// const orderBook = new OrderBook();
+const orderService = new OrderService();
 
 const distributeOrder = (order) => {
   link.lookup('exchange_service', (err, peers) => {
@@ -31,7 +33,6 @@ const distributeOrder = (order) => {
 
     async.each(peers, (peer, callback) => {
       if (peer.port === service.port) {
-        // Evitar enviarse la orden a sí mismo
         return callback();
       }
       peerClient.request(
@@ -59,25 +60,22 @@ service.on('request', (rid, key, payload, handler) => {
   console.log('🚀 ~ service.on ~ rid:', rid);
   console.log('🚀 ~ service.on ~ key:', key);
   console.log('🚀 ~ service.on ~ Order received:', payload);
-  // handler.reply(null, 'Order processed');
   const { method, data } = payload;
   if (method === 'addOrder') {
-    if (orderBook.processedOrders.has(data.id)) {
+    try {
+      const { matchedOrders, unmatchedOrders } = orderService.createNewOrder(data);
+
+      matchedOrders.forEach(({ order, match }) => {
+        console.log(`Matched order: ${order.id} with ${match.id}`);
+      });
+
+      unmatchedOrders.forEach((order) => {
+        distributeOrder(order);
+      });
+    } catch (error) {
+      console.error('Error processing order:', error);
       handler.reply(null, 'Order already processed');
-      return;
     }
-    orderBook.addOrder(data);
-    console.log('🚀 ~ service.on ~ orderBook:', orderBook);
-    const { matchedOrders, unmatchedOrders } = orderBook.matchOrders();
-
-    matchedOrders.forEach(({ order, match }) => {
-      console.log(`Matched order: ${order.id} with ${match.id}`);
-    });
-
-    unmatchedOrders.forEach((order) => {
-      distributeOrder(order);
-    });
-
-    handler.reply(null, 'Order processed');
   }
+  handler.reply(null, 'Order processed');
 });

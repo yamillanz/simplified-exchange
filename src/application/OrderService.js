@@ -10,7 +10,7 @@ class OrderService {
     if (this.orderBook.processedOrders.has(data.id)) {
       // handler.reply(null, 'Order already processed');
       // return;
-      throw new Error('Order already processed');
+     throw new Error('Order already processed');
     }
     const order = new Order(
       data.id,
