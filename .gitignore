@@ -1,0 +1,33 @@
+
+# Dependencias de Node.js
+node_modules/
+
+# Archivos de registro
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Datos de ejecución
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Cobertura de pruebas
+coverage/
+*.lcov
+
+# Caché de ESLint
+.eslintcache
+
+# Archivos de entorno
+.env
+
+# Salida de compilación
+dist/
+build/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
