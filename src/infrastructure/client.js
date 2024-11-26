@@ -16,7 +16,7 @@ const sendOrder = (order) => {
     { timeout: 30000 },
     (err, result) => {
       if (err) {
-        console.log('🚀 ~ sendOrder ~ err:', err);
+        console.error('Error sending order:', err);
       } else {
         console.log(result);
       }
